@@ -128,6 +128,7 @@ export interface ConfigParameters {
   fileDiscoveryService?: FileDiscoveryService;
   bugCommand?: BugCommandSettings;
   model: string;
+  baseUrl?: string;
   extensionContextFilePaths?: string[];
 }
 
@@ -166,6 +167,7 @@ export class Config {
   private readonly cwd: string;
   private readonly bugCommand: BugCommandSettings | undefined;
   private readonly model: string;
+  private readonly baseUrl: string | undefined;
   private readonly extensionContextFilePaths: string[];
   private modelSwitchedDuringSession: boolean = false;
   flashFallbackHandler?: FlashFallbackHandler;
@@ -209,6 +211,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
+    this.baseUrl = params.baseUrl;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
 
     if (params.contextFileName) {
@@ -241,7 +244,10 @@ export class Config {
     const contentConfig = await createContentGeneratorConfig(
       modelToUse,
       authMethod,
-      this,
+      {
+        getModel: this.getModel.bind(this),
+        getBaseUrl: this.getBaseUrl.bind(this),
+      },
     );
 
     const gc = new GeminiClient(this);
@@ -262,6 +268,10 @@ export class Config {
 
   getContentGeneratorConfig(): ContentGeneratorConfig {
     return this.contentGeneratorConfig;
+  }
+
+  getBaseUrl(): string | undefined {
+    return this.baseUrl;
   }
 
   getModel(): string {

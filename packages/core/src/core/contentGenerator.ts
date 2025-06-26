@@ -43,6 +43,7 @@ export enum AuthType {
 export type ContentGeneratorConfig = {
   model: string;
   apiKey?: string;
+  baseUrl?: string;
   vertexai?: boolean;
   authType?: AuthType | undefined;
 };
@@ -50,12 +51,13 @@ export type ContentGeneratorConfig = {
 export async function createContentGeneratorConfig(
   model: string | undefined,
   authType: AuthType | undefined,
-  config?: { getModel?: () => string },
+  config?: { getModel?: () => string; getBaseUrl?: () => string | undefined },
 ): Promise<ContentGeneratorConfig> {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const googleApiKey = process.env.GOOGLE_API_KEY;
   const googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
   const googleCloudLocation = process.env.GOOGLE_CLOUD_LOCATION;
+  const baseUrl = config?.getBaseUrl?.();
 
   // Use runtime model from config if available, otherwise fallback to parameter or default
   const effectiveModel = config?.getModel?.() || model || DEFAULT_GEMINI_MODEL;
@@ -63,6 +65,7 @@ export async function createContentGeneratorConfig(
   const contentGeneratorConfig: ContentGeneratorConfig = {
     model: effectiveModel,
     authType,
+    baseUrl,
   };
 
   // if we are using google auth nothing else to validate for now
@@ -73,7 +76,7 @@ export async function createContentGeneratorConfig(
   if (authType === AuthType.USE_GEMINI && geminiApiKey) {
     contentGeneratorConfig.apiKey = geminiApiKey;
     contentGeneratorConfig.model = await getEffectiveModel(
-      contentGeneratorConfig.apiKey,
+      contentGeneratorConfig.apiKey ?? '',
       contentGeneratorConfig.model,
     );
 
@@ -89,7 +92,7 @@ export async function createContentGeneratorConfig(
     contentGeneratorConfig.apiKey = googleApiKey;
     contentGeneratorConfig.vertexai = true;
     contentGeneratorConfig.model = await getEffectiveModel(
-      contentGeneratorConfig.apiKey,
+      contentGeneratorConfig.apiKey ?? '',
       contentGeneratorConfig.model,
     );
 
@@ -116,11 +119,16 @@ export async function createContentGenerator(
     config.authType === AuthType.USE_GEMINI ||
     config.authType === AuthType.USE_VERTEX_AI
   ) {
-    const googleGenAI = new GoogleGenAI({
-      apiKey: config.apiKey === '' ? undefined : config.apiKey,
-      vertexai: config.vertexai,
-      httpOptions,
-    });
+    const googleGenAI = new GoogleGenAI(
+      {
+        apiKey: config.apiKey === '' ? undefined : config.apiKey,
+        vertexai: config.vertexai,
+        httpOptions: {
+          ...httpOptions,
+          baseUrl: config.baseUrl,
+        },
+      }
+    );
 
     return googleGenAI.models;
   }
