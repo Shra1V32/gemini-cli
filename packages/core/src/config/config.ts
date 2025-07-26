@@ -170,6 +170,7 @@ export interface ConfigParameters {
   checkpointing?: boolean;
   proxy?: string;
   cwd: string;
+  baseUrl?: string | undefined;
   fileDiscoveryService?: FileDiscoveryService;
   bugCommand?: BugCommandSettings;
   model: string;
@@ -216,6 +217,7 @@ export class Config {
     enableRecursiveFileSearch: boolean;
   };
   private fileDiscoveryService: FileDiscoveryService | null = null;
+  private readonly baseUrl: string | undefined;
   private gitService: GitService | undefined = undefined;
   private readonly checkpointing: boolean;
   private readonly proxy: string | undefined;
@@ -282,6 +284,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model;
+    this.baseUrl = params.baseUrl;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
     this.maxSessionTurns = params.maxSessionTurns ?? -1;
     this.experimentalAcp = params.experimentalAcp ?? false;
@@ -545,6 +548,10 @@ export class Config {
 
   getUsageStatisticsEnabled(): boolean {
     return this.usageStatisticsEnabled;
+  }
+
+  getBaseUrl(): string | undefined {
+    return this.baseUrl;
   }
 
   getExtensionContextFilePaths(): string[] {

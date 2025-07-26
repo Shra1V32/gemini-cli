@@ -422,6 +422,7 @@ export async function loadCliConfig(
     blockedMcpServers,
     noBrowser: !!process.env.NO_BROWSER,
     summarizeToolOutput: settings.summarizeToolOutput,
+    baseUrl: process.env.GEMINI_BASE_URL,
     ideMode,
     ideClient,
   });
