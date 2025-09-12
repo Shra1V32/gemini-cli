@@ -620,6 +620,7 @@ export async function loadCliConfig(
     blockedMcpServers,
     noBrowser: !!process.env['NO_BROWSER'],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
+    baseUrl: process.env['GEMINI_BASE_URL'],
     ideMode,
     chatCompression: settings.model?.chatCompression,
     folderTrust,

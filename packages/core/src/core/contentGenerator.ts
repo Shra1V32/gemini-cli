@@ -53,6 +53,7 @@ export type ContentGeneratorConfig = {
   vertexai?: boolean;
   authType?: AuthType;
   proxy?: string;
+  baseUrl?: string | undefined;
 };
 
 export function createContentGeneratorConfig(
@@ -63,10 +64,12 @@ export function createContentGeneratorConfig(
   const googleApiKey = process.env['GOOGLE_API_KEY'] || undefined;
   const googleCloudProject = process.env['GOOGLE_CLOUD_PROJECT'] || undefined;
   const googleCloudLocation = process.env['GOOGLE_CLOUD_LOCATION'] || undefined;
+  const baseUrl = config?.getBaseUrl?.();
 
   const contentGeneratorConfig: ContentGeneratorConfig = {
     authType,
     proxy: config?.getProxy(),
+    baseUrl,
   };
 
   // If we are using Google auth or we are in Cloud Shell, there is nothing else to validate for now
@@ -78,7 +81,7 @@ export function createContentGeneratorConfig(
   }
 
   if (authType === AuthType.USE_GEMINI && geminiApiKey) {
-    contentGeneratorConfig.apiKey = geminiApiKey;
+    contentGeneratorConfig.apiKey = geminiApiKey ?? '';
     contentGeneratorConfig.vertexai = false;
 
     return contentGeneratorConfig;
@@ -88,7 +91,7 @@ export function createContentGeneratorConfig(
     authType === AuthType.USE_VERTEX_AI &&
     (googleApiKey || (googleCloudProject && googleCloudLocation))
   ) {
-    contentGeneratorConfig.apiKey = googleApiKey;
+    contentGeneratorConfig.apiKey = googleApiKey ?? '';
     contentGeneratorConfig.vertexai = true;
 
     return contentGeneratorConfig;
@@ -142,7 +145,10 @@ export async function createContentGenerator(
     const googleGenAI = new GoogleGenAI({
       apiKey: config.apiKey === '' ? undefined : config.apiKey,
       vertexai: config.vertexai,
-      httpOptions,
+      httpOptions: {
+        ...httpOptions,
+        baseUrl: config.baseUrl,
+      },
     });
     return new LoggingContentGenerator(googleGenAI.models, gcConfig);
   }

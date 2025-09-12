@@ -204,6 +204,7 @@ export interface ConfigParameters {
   checkpointing?: boolean;
   proxy?: string;
   cwd: string;
+  baseUrl?: string | undefined;
   fileDiscoveryService?: FileDiscoveryService;
   includeDirectories?: string[];
   bugCommand?: BugCommandSettings;
@@ -276,6 +277,7 @@ export class Config {
     disableFuzzySearch: boolean;
   };
   private fileDiscoveryService: FileDiscoveryService | null = null;
+  private readonly baseUrl: string | undefined;
   private gitService: GitService | undefined = undefined;
   private readonly checkpointing: boolean;
   private readonly proxy: string | undefined;
@@ -373,6 +375,7 @@ export class Config {
     this.fileDiscoveryService = params.fileDiscoveryService ?? null;
     this.bugCommand = params.bugCommand;
     this.model = params.model || DEFAULT_GEMINI_MODEL;
+    this.baseUrl = params.baseUrl;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
     this.maxSessionTurns = params.maxSessionTurns ?? -1;
     this.experimentalZedIntegration =
@@ -770,6 +773,10 @@ export class Config {
 
   getUsageStatisticsEnabled(): boolean {
     return this.usageStatisticsEnabled;
+  }
+
+  getBaseUrl(): string | undefined {
+    return this.baseUrl;
   }
 
   getExtensionContextFilePaths(): string[] {
